@@ -1,0 +1,285 @@
+.TH man 1 "05 September 2024" "1.0" "repositorysync.sh man page"
+.SH NAME
+
+repositorysync.sh — Script for syncing external repositorities for Oralce Linux / Debian / Proxmox / GIT / other locally
+
+.SH SYNOPSIS
+
+repositorysync.sh [--check | check | -check] [--help | help | -h] [--download | download | -d] [--version | version | -v] 
+
+.SH DESCRIPTION
+
+The script 'repositorysync.sh' is used for syncing repository data on different sources to a local storage medium. Additionally it can be used for uploading the information later to a remote storage. 
+.PP
+To run the script you need to configure a configuration file. Further information can be obtained from the 'CONFIGURATION' part.
+.PP
+.B Supported repository sources:
+.PP
+    - oracle repository sources
+.PP
+    - debian repository sources
+.PP
+    - Proxmox repository sources (including Enterprise repositories)
+.PP
+    - Git repository sources
+.PP
+    - single file ressources for non-redundant download
+.PP
+    - single folder ressources for redundant download
+.PP
+.B The options are as follows (only 1 option can be provided):
+.PP
+    --help      | help      | -h        output the help instructions
+.PP
+    --download  | download  | -d        start syncing process for defined configuration items (check subroutine is included)
+.PP
+    --version   | version   | -v        output version
+.PP
+.SH DEPENDENCIES
+.PP
+.B The necessary dependencies are as follows:
+.PP
+    GNU Coreutils           >= 8.32             clear | cat | cp | date | dirname | echo | false | ln | mkdir | realpath | rm | test | true
+.PP
+    GNU Awk                 >= 5.1.0
+.PP
+    gpg                     >= 2.2.40
+.PP
+    grep                    >= 3.6
+.PP
+    sed                     >= 4.9
+.PP
+    wget                    >= 1.21
+.PP
+    whereis                 >= 2.36.1
+.PP
+.B The optional dependencies are as follows:
+.PP
+    dnf                     >= 4.14.0           for syncing Oracle repositories
+.PP
+    ftpsync                 >= 20180513         for syncing Debian repositories
+.PP
+    git                     >= 2.30.2           for syncing GIT repositories
+.PP
+    proxmox-offline-mirror  >= 0.6.6            for syncing Proxmox Enterprise repositories
+.PP        
+.SH CONFIGURATION
+.PP
+The configuration file needs to be placed / linked in the same folder as the main script and has to be named 'repositorysync.conf'.
+.PP
+.B The necessary variables are as follows:
+.PP
+    REPO_DOWNLOAD_BASEPATH              defines the local base save path where the repositories and logs are stored
+.PP
+        EXAMPLE                         /mnt/extern
+.PP
+    REPO_DOWNLOAD_ARCH_INCLUDE          defines the CPU architectures which should be included (not each repository download supports all CPU architectures)
+.PP  
+        SEPARATOR                   each entry is divided  by a pipe (|)
+.PP
+        VALUES   
+.PP
+            amd64                   supported by Debian / Oracle / Proxmox repositories
+.PP
+            i386                    supported by Debian / Oracle / Proxmox repositories
+.PP
+            armhf                   supported by Debian repositories
+.PP
+            armel                   supported by Debian repositories
+.PP
+            arm64                   supported by Debian / Oracle repositories
+.PP
+            arc                     supported by Debian repositories
+.PP
+            mips                    supported by Debian repositories
+.PP
+            mipsel                  supported by Debian repositories
+.PP
+            mips64el                supported by Debian repositories
+.PP
+            ppc64el                 supported by Debian repositories
+.PP
+            s390x                   supported by Debian repositories
+.PP
+            riscv64                 supported by Debian repositories
+.PP
+            source                  supported by Debian / Oracle repositories
+.PP
+            EXAMPLE                 REPO_DOWNLOAD_ARCH_INCLUDE="amd64|i386|armhf|armel|arm64"
+.PP
+.B The necessary variables for the '--download | download | -d' option are as follows:    
+.PP
+    REPO_DOWNLOAD_DEBIAN                enables the Debian repository sync (ensure that variable REPO_DOWNLOAD_DEBIAN_REPOSITORIES is defined)
+.PP
+        VALUES                      
+.PP
+            1 (enable sync)
+.PP
+            other values (disable sync)
+.PP
+        EXAMPLE                         REPO_DOWNLOAD_DEBIAN=1
+.PP        
+    REPO_DOWNLOAD_DEBIAN_EXCLUDE        sets the Debian exclude pattern filter for the rsync binary
+.PP
+        FORMAT                          each entry is divided  by an empty space     
+.PP
+            --exclude=<STRING>          wildcards are permitted (please reference to the rsync exclude option
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_DEBIAN_EXCLUDE="--exclude=experimental*"    
+.PP        
+    REPO_DOWNLOAD_DEBIAN_REPOSITORIES   defines the single repository parameters for the Debian sync - each entry is divided  by a pipe (|)
+.PP    
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <SOURCE_URI>                source domain URI without "http://" / "https://"
+.PP
+            <SOURCE_REPO>               sub path of URI
+.PP
+            <TARGET_PATH>               local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/debian/<TARGET_PATH>)      
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_DEBIAN_REPOSITORIES="ftp.de.debian.org:::debian-security:::debian-security|"
+.PP
+            REPO_DOWNLOAD_DEBIAN_REPOSITORIES+="ftp.de.debian.org:::debian:::debian"
+.PP
+    REPO_DOWNLOAD_ORACLE                enables the Oracle repository sync (ensure that variable REPO_DOWNLOAD_ORACLE_REPOSITORIES is defined)
+.PP
+        VALUES                      
+.PP
+            1 (enable sync)
+.PP
+            other values (disable sync)
+.PP
+        EXAMPLE                     REPO_DOWNLOAD_ORACLE=1
+.PP
+    REPO_DOWNLOAD_ORACLE_REPOSITORIES   defines the single repository parameters for the Oracle sync - each entry is divided  by a pipe (|)
+.PP
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <ID>                        ID to which will the repository will be saved to ("<REPO_DOWNLOAD_BASEPATH>/oracle/OL<SOURCE_VERSION>/<ID>")
+.PP
+            <DESCRIPTION>               repository description which will be written to the name field of the temporary configuration file             
+.PP
+            <SOURCE_URI>                source URI which will be used for the syncronisation
+.PP
+            <SOURCE_VERSION>            Oracle Linux version which it is used for (necessary to create the sub folder)
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_ORACLE_REPOSITORIES="ol9_baseos_latest_x86_64:::Oracle Linux 9 (x86_64) BaseOS Latest:::https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64:::9|"
+.PP
+            REPO_DOWNLOAD_ORACLE_REPOSITORIES+="ol9_baseos_latest_aarch64:::Oracle Linux 9 (aarch64) BaseOS Latest:::https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/aarch64:::9|"
+.PP
+    REPO_DOWNLOAD_PROXMOX               enables the Proxmox repository sync (ensure that variable REPO_DOWNLOAD_PROXMOX_REPOSITORIES is defined)
+.PP
+        VALUES                      
+.PP
+            1 (enable sync)
+.PP
+            other values (disable sync)
+.PP
+        EXAMPLE                         REPO_DOWNLOAD_PROXMOX=1
+.PP
+    REPO_DOWNLOAD_PROXMOX_REPOSITORIES  defines the single repository parameters for the Proxmox sync - each entry is divided  by a pipe (|)
+.PP
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <SOURCE_URI>                source URI which will be used for the syncronisation
+.PP
+            <RECURSION>                 set it to "1" to enable recursion or "0" to disable it (e.g. single file)
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_PROXMOX_REPOSITORIES="http://download.proxmox.com/iso/:::1|"
+.PP
+            REPO_DOWNLOAD_PROXMOX_REPOSITORIES+="http://download.proxmox.com/debian/ceph-quincy/:::1|"
+.PP
+    REPO_DOWNLOAD_GIT                   enables the Git repository sync (ensure that variable REPO_DOWNLOAD_GIT_REPOSITORIES is defined)
+.PP
+        VALUES                      
+.PP
+            1 (enable sync)
+.PP
+            other values (disable sync)
+.PP
+        EXAMPLE                         REPO_DOWNLOAD_GIT=1
+.PP
+    REPO_DOWNLOAD_GIT_REPOSITORIES      defines the single repository parameters for the Git sync - each entry is divided  by a pipe (|)
+.PP
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <SOURCE_URI>                source URI which will be used for the syncronisation
+.PP
+            <TARGET_PATH>               local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/git/<TARGET_PATH>)
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_GIT_REPOSITORIES="https://github.com/gpg/gpgol.git:::gpg/gpgol.git|"
+.PP
+            REPO_DOWNLOAD_GIT_REPOSITORIES+="https://github.com/gpg/gpg4win.git:::gpg/gpg4win.git"
+.PP
+    REPO_DOWNLOAD_OTHER                 enables the other repository sync (ensure that variable REPO_DOWNLOAD_OTHER_REPOSITORIES is defined)
+.PP
+        VALUES                      
+.PP
+            1 (enable sync)
+.PP
+            other values (disable sync)
+.PP
+        EXAMPLE                         REPO_DOWNLOAD_OTHER=1
+.PP
+    REPO_DOWNLOAD_OTHER_REPOSITORIES    defines the single repository parameters for the other sync - each entry is divided  by a pipe (|)
+.PP
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <SOURCE_URI>                source URI which will be used for the syncronisation
+.PP
+            <TARGET_PATH>               local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/other/<TARGET_PATH>)
+.PP
+            <RECURSION>                 set it to "1" to enable recursion or "0" to disable it (e.g. single file)
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_OTHER_REPOSITORIES="https://www.memtest86.com/downloads/memtest86-usb.zip:::memtest:::0|"
+.PP
+            REPO_DOWNLOAD_OTHER_REPOSITORIES+="https://ftp5.gwdg.de/pub/linux/oracle/OL7/:::oracle/iso:::1"
+.PP
+.B The optional variables are as follows:
+.PP
+    REPO_DOWNLOAD_PROXMOX_ENTERPRISE    defines the necessary keys and service ID to permit enterprise repository synchronisation
+.PP
+        SEPARATOR                       each entry is divided  by a pipe (|)
+.PP
+        FORMAT                          each value of the entry is separated by three colons (:::)
+.PP
+            <POM_KEY>                   Proxmox Offline Mirror Client key (can be ordered freely after purchasing a premium license - https://pom.proxmox.com/offline-keys.html#setup-offline-mirror-key)
+.PP
+            <PREMIUM_KEY>               Proxmox Premium Key for PVE / PBS...
+.PP
+            <PREMIUM_KEY_SERVER_ID>     server ID to which the Proxmox Premium Key is assigned (https://pom.proxmox.com/offline-keys.html#setup-offline-mirror-key)
+.PP
+        EXAMPLE
+.PP
+            REPO_DOWNLOAD_PROXMOX_ENTERPRISE="pom-1234abcdef:::pve2p-12abc3d4e5:::0AB1C345D67EFFF899F9F99FFFFF9F9|"
+.PP
+            REPO_DOWNLOAD_PROXMOX_ENTERPRISE+="pom-1234abcdef:::pve2p-12abc3d4e5:::0AB1C345D67EFFF899F9F99FFFFF9F9"
+.PP
+.SH BUGS
+.PP
+Please report any bugs at: 
+.PP
+.SH AUTHOR
+Martin Manegold
