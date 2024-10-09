@@ -94,18 +94,18 @@ The folowing configuration options are valid.
 | REPO_DOWNLOAD_ARCH_INCLUDE        | defines the CPU architectures which should be included (not each repository download supports all CPU architectures)| REPO_DOWNLOAD_ARCH_INCLUDE="amd64|i386|armhf|armel|arm64" | optional  | amd64,i386,armhf,armel,arm64,arc,mips,mipsel,mips64el,ppc64el,s390x,riscv64,source| \|              |                 |         |
 | REPO_DOWNLOAD_DEBIAN              | enables the Debian repository sync (ensure that variable REPO_DOWNLOAD_DEBIAN_REPOSITORIES is defined)              | REPO_DOWNLOAD_DEBIAN=1                                    | optional  | 0,1                                                                               |                 |                 |         |
 | REPO_DOWNLOAD_DEBIAN_EXCLUDE      | sets the Debian exclude pattern filter for the rsync binary                                                         | REPO_DOWNLOAD_DEBIAN_EXCLUDE="--exclude=experimental*"    | optional  | STRING                                                                            |                 |                 |         |
-| REPO_DOWNLOAD_DEBIAN_REPOSITORIES | defines the single repository parameters for the Debian sync - each entry is divided  by a pipe (\|)                | [^1]                                                      | optional  | [^1]                                                                              | \|              | :::             |         |
+| REPO_DOWNLOAD_DEBIAN_REPOSITORIES | defines the single repository parameters for the Debian sync - each entry is divided  by a pipe (\|)                | <sup>[1](#foot1)</sup>                                    | optional  | <sup>[1](#foot1)</sup>                                                            | \|              | :::             |         |
 | REPO_DOWNLOAD_ORACLE              | enables the Oracle repository sync (ensure that variable REPO_DOWNLOAD_ORACLE_REPOSITORIES is defined)              | REPO_DOWNLOAD_ORACLE=1                                    | optional  | 0,1                                                                               |                 |                 |         |
-| REPO_DOWNLOAD_ORACLE_REPOSITORIES | defines the single repository parameters for the Oracle sync - each entry is divided  by a pipe (\|)                | [^2]                                                      | optional  | [^2]                                                                              | \|              | :::             |         |
+| REPO_DOWNLOAD_ORACLE_REPOSITORIES | defines the single repository parameters for the Oracle sync - each entry is divided  by a pipe (\|)                | <sup>[2](#foot2)</sup>                                    | optional  | <sup>[2](#foot2)</sup>                                                            | \|              | :::             |         |
 | REPO_DOWNLOAD_PROXMOX             | enables the Proxmox repository sync (ensure that variable REPO_DOWNLOAD_PROXMOX_REPOSITORIES is defined)            | REPO_DOWNLOAD_PROXMOX=1                                   | optional  | 0,1                                                                               |                 |                 |         |
-| REPO_DOWNLOAD_PROXMOX_ENTERPRISE  | defines the necessary keys and service ID to permit Proxmox enterprise repository synchronisation                   | [^3]                                                      | optional  | [^3]                                                                              | \|              | :::             |         |
-| REPO_DOWNLOAD_PROXMOX_REPOSITORIES| defines the single repository parameters for the Proxmox sync - each entry is divided  by a pipe (\|)               | [^4]                                                      | optional  | [^4]                                                                              | \|              | :::             |         |
+| REPO_DOWNLOAD_PROXMOX_ENTERPRISE  | defines the necessary keys and service ID to permit Proxmox enterprise repository synchronisation                   | <sup>[3](#foot3)</sup>                                    | optional  | <sup>[3](#foot3)</sup>                                                            | \|              | :::             |         |
+| REPO_DOWNLOAD_PROXMOX_REPOSITORIES| defines the single repository parameters for the Proxmox sync - each entry is divided  by a pipe (\|)               | <sup>[4](#foot4)</sup>                                    | optional  | <sup>[4](#foot4)</sup>                                                            | \|              | :::             |         |
 | REPO_DOWNLOAD_GIT                 | enables the GIT repository sync (ensure that variable REPO_DOWNLOAD_GIT_REPOSITORIES is defined)                    | REPO_DOWNLOAD_GIT=1                                       | optional  | 0,1                                                                               |                 |                 |         |
-| REPO_DOWNLOAD_GIT_REPOSITORIES    | defines the single repository parameters for the GIT sync - each entry is divided  by a pipe (\|)                   | [^5]                                                      | optional  | [^5]                                                                              | \|              | :::             |         |
+| REPO_DOWNLOAD_GIT_REPOSITORIES    | defines the single repository parameters for the GIT sync - each entry is divided  by a pipe (\|)                   | <sup>[5](#foot5)</sup>                                    | optional  | <sup>[5](#foot5)</sup>                                                            | \|              | :::             |         |
 | REPO_DOWNLOAD_OTHER               | enables the other repository sync (ensure that variable REPO_DOWNLOAD_OTHER_REPOSITORIES is defined)                | REPO_DOWNLOAD_OTHER=1                                     | optional  | 0,1                                                                               |                 |                 |         |
-| REPO_DOWNLOAD_OTHER_REPOSITORIES  | defines the single repository parameters for the other sync - each entry is divided  by a pipe (\|)                 | [^6]                                                      | optional  | [^6]                                                                              | \|              | :::             |         |
+| REPO_DOWNLOAD_OTHER_REPOSITORIES  | defines the single repository parameters for the other sync - each entry is divided  by a pipe (\|)                 | <sup>[6](#foot6)</sup>                                    | optional  | <sup>[6](#foot6)</sup>                                                            | \|              | :::             |         |
 
-[^1] Value Description vaiable 'REPO_DOWNLOAD_DEBIAN_REPOSITORIES'
+<a name="foot1">1</a> Value Description vaiable 'REPO_DOWNLOAD_DEBIAN_REPOSITORIES'
 * SOURCE_URI            : source domain URI without "http://" / "https://"
 * SOURCE_REPO           : sub path of URI
 * TARGET_PATH           : local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/debian/<TARGET_PATH>)
@@ -122,7 +122,7 @@ or
                         REPO_DOWNLOAD_DEBIAN_REPOSITORIES="ftp.de.debian.org:::debian-security:::debian-security"
                         REPO_DOWNLOAD_DEBIAN_REPOSITORIES+="|ftp.de.debian.org:::debian:::debian"
 
-[^2] Value Description vaiable 'REPO_DOWNLOAD_ORACLE_REPOSITORIES'
+<a name="foot2">2</a> Value Description vaiable 'REPO_DOWNLOAD_ORACLE_REPOSITORIES'
 * ID                    : ID to which will the repository will be saved to ("<REPO_DOWNLOAD_BASEPATH>/oracle/OL<SOURCE_VERSION>/<ID>")
 * DESCRIPTION           : repository description which will be written to the name field of the temporary configuration file
 * SOURCE_URI            : source URI which will be used for the syncronisation
@@ -140,7 +140,7 @@ or
                         REPO_DOWNLOAD_ORACLE_REPOSITORIES="ol9_baseos_latest_x86_64:::Oracle Linux 9 (x86_64) BaseOS Latest:::https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64:::9"
                         REPO_DOWNLOAD_ORACLE_REPOSITORIES+="|ol9_baseos_latest_aarch64:::Oracle Linux 9 (aarch64) BaseOS Latest:::https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/aarch64:::9"
 
-[^3] Value Description vaiable 'REPO_DOWNLOAD_PROXMOX_ENTERPRISE'
+<a name="foot3">3</a> Value Description vaiable 'REPO_DOWNLOAD_PROXMOX_ENTERPRISE'
 * POM_KEY               : Proxmox Offline Mirror Client key (can be ordered freely after purchasing a premium license - https://pom.proxmox.com/offline-keys.html#setup-offline-mirror-key)
 * PREMIUM_KEY           : Proxmox Premium Key for PVE / PBS...
 * PREMIUM_KEY_SERVER_ID : server ID to which the Proxmox Premium Key is assigned (https://pom.proxmox.com/offline-keys.html#setup-offline-mirror-key)
@@ -157,7 +157,7 @@ or
                         REPO_DOWNLOAD_PROXMOX_ENTERPRISE="pom-1234abcdef:::pve2p-12abc3d4e5:::0AB1C345D67EFFF899F9F99FFFFF9F9"
                         REPO_DOWNLOAD_PROXMOX_ENTERPRISE+="|pom-1234abcdef:::pve2p-12abc3d4e5:::0AB1C345D67EFFF899F9F99FFFFF9F9"
 
-[^4] Value Description vaiable 'REPO_DOWNLOAD_PROXMOX_REPOSITORIES'
+<a name="foot4">4</a> Value Description vaiable 'REPO_DOWNLOAD_PROXMOX_REPOSITORIES'
 * SOURCE_URI            : source URI which will be used for the syncronisation
 * RECURSION             : set it to "1" to enable recursion or "0" to disable it (e.g. single file)
 
@@ -173,7 +173,7 @@ or
                         REPO_DOWNLOAD_PROXMOX_REPOSITORIES="http://download.proxmox.com/iso/:::1"
                         REPO_DOWNLOAD_PROXMOX_REPOSITORIES+="|http://download.proxmox.com/debian/ceph-reef/:::1"
                         
-[^5] Value Description vaiable 'REPO_DOWNLOAD_GIT_REPOSITORIES'
+<a name="foot5">5</a> Value Description vaiable 'REPO_DOWNLOAD_GIT_REPOSITORIES'
 * SOURCE_URI            : source URI which will be used for the syncronisation
 * TARGET_PATH           : local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/git/<TARGET_PATH>)
 
@@ -189,7 +189,7 @@ or
                         REPO_DOWNLOAD_GIT_REPOSITORIES+="https://github.com/gpg/gpgol.git:::gpg/gpgol.git"
                         REPO_DOWNLOAD_GIT_REPOSITORIES+="|https://github.com/gpg/gpg4win.git:::gpg/gpg4win.git"
                         
-[^6] Value Description vaiable 'REPO_DOWNLOAD_OTHER_REPOSITORIES'
+<a name="foot6">6</a> Value Description vaiable 'REPO_DOWNLOAD_OTHER_REPOSITORIES'
 * SOURCE_URI            : source URI which will be used for the syncronisation
 * TARGET_PATH           : local folder name which the local files are synced to (<REPO_DOWNLOAD_BASEPATH>/git/<TARGET_PATH>)
 * RECURSION             : set it to "1" to enable recursion or "0" to disable it (e.g. single file)
