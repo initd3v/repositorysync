@@ -57,16 +57,16 @@ The log file is located in the download directory.
 
 ```
 $ chmod u+x /tmp/repositorysync/src/repositorysync.sh
-$ /tmp/linux_monitor/src/monitor.sh [--help | help | -h] [--download | download | -download] [--version | version | -v]
+$ /tmp/repositorysync/src/repositorysync.sh [--help | help | -h] [--download | download | -download] [--version | version | -v]
 ```
 
 ### Syntax
 
 #### Syntax Overview
 
-* monitor.sh [--help | help | -h]
-* monitor.sh [--download | download | -d]
-* monitor.sh [--version | version | -v]
+* repositorysync.sh [--help | help | -h]
+* repositorysync.sh [--download | download | -d]
+* repositorysync.sh [--version | version | -v]
 
 #### Syntax Description
 
