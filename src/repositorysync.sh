@@ -755,9 +755,9 @@ function f_download() {
                     if [ ! -d "${TMP_DOWNLOAD_GIT_PATH}" ] ; then
                         ${CMD_GIT} clone --quiet --mirror "${TMP_DOWNLOAD_GIT_URI}" "${TMP_DOWNLOAD_GIT_PATH}"
                         if [ $? -eq ${TMP_TRUE} ] ; then
-                            f_output "info" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully initialized for URI '${TMP_DOWNLOAD_GIT_URI}'."
+                            f_output "info" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully initialized for URI '${TMP_DOWNLOAD_GIT_URI}'."
                         else
-                            f_output "warning" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be initialized. Skipping it..."
+                            f_output "warning" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be initialized. Skipping it..."
                             ${CMD_RM} -rf "${TMP_DOWNLOAD_GIT_PATH}" 2> /dev/null
                             continue
                         fi
@@ -765,12 +765,44 @@ function f_download() {
                     cd "${TMP_DOWNLOAD_GIT_PATH}"
                     ${CMD_GIT} fetch --quiet --all 2> /dev/null
                     if [ $? -eq ${TMP_TRUE} ] ; then
-                        f_output "info" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully updated for URI '${TMP_DOWNLOAD_GIT_URI}'."
+                        f_output "info" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully updated for URI '${TMP_DOWNLOAD_GIT_URI}'."
                     else
-                        f_output "warning" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be updated Skipping it..."
+                        f_output "warning" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be updated. Skipping it..."
                     fi
                     ${CMD_GIT} reset --hard origin/master 2> /dev/null
                     cd "${REPO_DOWNLOAD_BASEPATH}"
+
+                    # download releases
+                    TMP_DOWNLOAD_GIT_URI_SHORT=$( ${CMD_AWK} -F '.git$' '{ print $1 }' <<< "${TMP_DOWNLOAD_GIT_URI}" )
+                    TMP_DOWNLOAD_GIT_VERSION=$( ${CMD_WGET} --connect-timeout=5 --waitretry=1 --tries=1 --server-response "${TMP_DOWNLOAD_GIT_URI_SHORT}/releases/latest" --quiet --output-document=/dev/null 2>&1 | ${CMD_AWK} -F 'Location: ' '{ printf $2 }' | ${CMD_AWK} -F ' ' '{ print $1 }' | ${CMD_AWK} -F '/' '{ print $NF }' )
+
+                    if [ $? -ne ${TMP_TRUE} ] || [ "${TMP_DOWNLOAD_GIT_VERSION}x" == "x" ] ; then
+                        f_output "warning" "The GIT repository latest version extraction with value '${TMP_DOWNLOAD_GIT_VERSION}' for URI '${TMP_DOWNLOAD_GIT_URI_SHORT}/releases/latest' failed. Skipping latest release download..."
+                        continue
+                    fi
+
+                    ${CMD_WGET} --connect-timeout=5 --waitretry=1 --tries=1 --convert-links "${TMP_DOWNLOAD_GIT_URI_SHORT}/releases/expanded_assets/${TMP_DOWNLOAD_GIT_VERSION}" --quiet --output-document="/tmp/github.wget"
+
+                    if [ $? -ne ${TMP_TRUE} ] || [ ! -f "/tmp/github.wget" ] ; then
+                        f_output "warning" "The GIT repository latest version asset link extraction to '/tmp/github.wget' for URI '${TMP_DOWNLOAD_GIT_URI_SHORT}/releases/expanded_assets/${TMP_DOWNLOAD_GIT_VERSION}' failed. Skipping latest release download..."
+                        ${CMD_RM} --force "/tmp/github.wget" 2> /dev/null
+                        continue
+                    fi
+
+                    TMP_DOWNLOAD_GIT_URI_RELEASE=$( ${CMD_AWK} -F '<a href="' '{ print $2 }' < "/tmp/github.wget" | ${CMD_AWK} -F '"' '{ if($1!="") printf $1"|" }' )
+                    ${CMD_RM} --force "/tmp/github.wget" 2> /dev/null
+
+                    TMP_DOWNLOAD_GIT_URI_NOHTTP=$( ${CMD_AWK} -F '//' '{print $2}' <<< "${TMP_DOWNLOAD_GIT_URI}" )
+                    if [ "${TMP_DOWNLOAD_GIT_URI_NOHTTP}x" == "x" ] ; then
+                        f_output "warning" "The GIT repository URI without 'http:' / 'https:' could not be extracted. Skipping latest release download..."
+                        continue
+                    fi
+
+                    for RELEASE in ${TMP_DOWNLOAD_GIT_URI_RELEASE} ; do
+                        if [ "${RELEASE}x" != "x" ] ; then
+                            f_download_generic "${RELEASE}" "${REPO_DOWNLOAD_BASEPATH}/other/github/${TMP_DOWNLOAD_GIT_URI_NOHTTP}/${TMP_DOWNLOAD_GIT_VERSION}" "0"
+                        fi
+                    done
                 done
                 IFS=${TMP_IFS}
             else
@@ -788,7 +820,7 @@ function f_download() {
         if [ "${REPO_DOWNLOAD_OTHER_REPOSITORIES}x" != "x" ] ; then
                 TMP_IFS=${IFS}
                 IFS='|'
-                for TMP in ${REPO_DOWNLOAD_OTHER_REPOSITORIES} ; do 
+                for TMP in ${REPO_DOWNLOAD_OTHER_REPOSITORIES} ; do
                     TMP_DOWNLOAD_OTHER_URI=$( ${CMD_AWK} -F ':::' '{ print $1 }' <<< "${TMP}" )
                     TMP_DOWNLOAD_OTHER_PATH=$( ${CMD_AWK} -F ':::' '{ print $2 }' <<< "${TMP}" )
                     TMP_DOWNLOAD_OTHER_PATH="${REPO_DOWNLOAD_BASEPATH}/other/${TMP_DOWNLOAD_OTHER_PATH}"
