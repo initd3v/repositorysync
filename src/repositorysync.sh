@@ -637,11 +637,21 @@ function f_download() {
                     fi
                 done
                 
+                # key refresh 
+                ${CMD_PROXMOX_OFFLINE_MIRROR} key refresh --config ${HOME}/.proxmox-offline-mirror.cfg >/dev/null 2>&1
+                if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
+                    f_output "info" "The Proxmox enterprise keys were successfully refreshed."
+                else
+                    f_output "warning" "The Proxmox enterprise keys were could not be refreshed. Ignoring it..."
+                fi
+                
                 # mirror configration
                 f_proxmox_enterprise_config "config mirror" "add" "--id bookworm-pve --architectures amd64 --base-dir ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH} --key-path ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/keys/proxmox-release-bookworm.gpg --repository 'deb https://enterprise.proxmox.com/debian/pve bookworm pve-enterprise' --sync 1 --verify 1 --use-subscription pve --config ${HOME}/.proxmox-offline-mirror.cfg"
                 if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
                     f_output "info" "The Proxmox enterprise mirror configuration for ID 'bookworm-pve' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
-                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-pve "
+                    if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS}" =~ .*(bookworm-pve) ]] ; then
+                        TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-pve "
+                    fi
                 else
                     f_output "warning" "The Proxmox enterprise mirror configuration for ID 'bookworm-pve' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
                 fi
@@ -649,7 +659,9 @@ function f_download() {
                 f_proxmox_enterprise_config "config mirror" "add" "--id bullseye-pve --architectures amd64 --base-dir ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH} --key-path ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/keys/proxmox-release-bullseye.gpg --repository 'deb https://enterprise.proxmox.com/debian/pve bullseye pve-enterprise' --sync 1 --verify 1 --use-subscription pve --config ${HOME}/.proxmox-offline-mirror.cfg"
                 if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
                     f_output "info" "The Proxmox enterprise mirror configuration for ID 'bullseye-pve' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
-                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bullseye-pve "
+                    if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS}" =~ .*(bullseye-pve) ]] ; then
+                        TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bullseye-pve "
+                    fi
                 else
                     f_output "warning" "The Proxmox enterprise mirror configuration for ID 'bullseye-pve' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
                 fi
@@ -657,7 +669,9 @@ function f_download() {
                 f_proxmox_enterprise_config "config mirror" "add" "--id bookworm-ceph_quincy --architectures amd64 --base-dir ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH} --key-path ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/keys/proxmox-release-bookworm.gpg --repository 'deb https://enterprise.proxmox.com/debian/ceph-quincy bookworm enterprise' --sync 1 --verify 1 --use-subscription pve --config ${HOME}/.proxmox-offline-mirror.cfg"
                 if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
                     f_output "info" "The Proxmox enterprise mirror configuration for ID 'bookworm-ceph_quincy' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
-                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-ceph_quincy "
+                    if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS}" =~ .*(bookworm-ceph_quincy) ]] ; then
+                        TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-ceph_quincy "
+                    fi
                 else
                     f_output "warning" "The Proxmox enterprise mirror configuration for ID 'bookworm-ceph_quincy' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
                 fi
@@ -665,17 +679,60 @@ function f_download() {
                 f_proxmox_enterprise_config "config mirror" "add" "--id bookworm-ceph_reef --architectures amd64 --base-dir ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH} --key-path ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/keys/proxmox-release-bookworm.gpg --repository 'deb https://enterprise.proxmox.com/debian/ceph-reef bookworm enterprise' --sync 1 --verify 1 --use-subscription pve --config ${HOME}/.proxmox-offline-mirror.cfg"
                 if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
                     f_output "info" "The Proxmox enterprise mirror configuration for ID 'bookworm-ceph_reef' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
-                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-ceph_reef "
+                    if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS}" =~ .*(bookworm-ceph_reef) ]] ; then
+                        TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS+="bookworm-ceph_reef "
+                    fi
                 else
                     f_output "warning" "The Proxmox enterprise mirror configuration for ID 'bookworm-ceph_reef' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
-                fi     
+                fi                
             done
             IFS=${TMP_IFS}
-
+            
+            # media configuration for offline activation
+            TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA=""
+            f_proxmox_enterprise_config "config media" "add" "--id bookworm-pve-media --mirrors proxmox-ve-bookworm-subscription --mirrors proxmox-ve-bookworm-enterprise --mountpoint ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/activation --sync 1 --verify 1 --config ${HOME}/.proxmox-offline-mirror.cfg"
+            if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
+                f_output "info" "The Proxmox enterprise media configuration for ID 'bookworm-pve-media' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
+                if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA}" =~ .*(bookworm-pve-media) ]] ; then
+                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA+="bookworm-pve-media "
+                fi
+            else
+                f_output "warning" "The Proxmox enterprise media configuration for ID 'bookworm-pve-media' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
+            fi 
+            
+            f_proxmox_enterprise_config "config media" "add" "--id bullseye-pve-media --mirrors proxmox-ve-bullseye-subscription --mirrors proxmox-ve-bullseye-enterprise --mountpoint ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/activation --sync 1 --verify 1 --config ${HOME}/.proxmox-offline-mirror.cfg"
+            if [ ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_RESULT} -eq ${TMP_TRUE} ] ; then
+                f_output "info" "The Proxmox enterprise media configuration for ID 'bullseye-pve-media' was successfully configured at '${HOME}/.proxmox-offline-mirror.cfg'."
+                if [[ ! "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA}" =~ .*(bullseye-pve-media) ]] ; then
+                    TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA+="bullseye-pve-media "
+                fi
+            else
+                f_output "warning" "The Proxmox enterprise media configuration for ID 'bullseye-pve-media' could not be configured at '${HOME}/.proxmox-offline-mirror.cfg'. Ignoring it..."
+            fi 
+            
+            ${CMD_MKDIR} --parents "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/activation" > /dev/null 2>&1
+            if [ $? -eq ${TMP_TRUE} ] ; then
+                f_output "info" "The download directory '${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/activation' was successfully created."
+                
+                for i in ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS_MEDIA} ; do
+                    f_output "info" "The Proxmox enterprise media snapshot with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' is starting."
+                    
+                    ${CMD_PROXMOX_OFFLINE_MIRROR} medium sync "${i}" --config "${HOME}/.proxmox-offline-mirror.cfg" --keys-only true >/dev/null 2>&1
+                    if [ $? -eq ${TMP_TRUE} ] ; then
+                        f_output "info" "The Proxmox enterprise media snapshot with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' was successfully downloaded."
+                    else
+                        f_output "warning" "The Proxmox enterprise media snapshot with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' could not be downloaded. Skippting it..."
+                        continue
+                    fi
+                done
+            else
+                f_output "warning" "The download directory '${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_PATH}/activation' could not be created. Skipping download of Proxmox enterprise media offline activation file...."
+            fi
+            
             for i in ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_IDS} ; do
                 f_output "info" "The Proxmox enterprise mirror snapshot with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' is starting."
                 
-                ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot create "${i}" --config ~/".proxmox-offline-mirror.cfg" >/dev/null 2>&1
+                ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot create "${i}" --config ${HOME}/.proxmox-offline-mirror.cfg >/dev/null 2>&1
                 if [ $? -eq ${TMP_TRUE} ] ; then
                     f_output "info" "The Proxmox enterprise mirror snapshot with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' was successfully downloaded."
                 else
@@ -683,7 +740,7 @@ function f_download() {
                     continue
                 fi
                 TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=""
-                TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=$( ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot list --id "${i}" --output-format text --config ~/".proxmox-offline-mirror.cfg" 2> /dev/null | ${CMD_AWK} -F '-\ ' '{ print $2 }' )
+                TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=$( ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot list --id "${i}" --output-format text --config ${HOME}/.proxmox-offline-mirror.cfg 2> /dev/null | ${CMD_AWK} -F '-\ ' '{ print $2 }' )
                 TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS_CHECK=$( ${CMD_GREP} --invert-match '^$' <<< "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS}" | ${CMD_GREP} --count '^' )
                 
                 if [ "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS_CHECK}x" == "x" ] ; then
@@ -696,7 +753,7 @@ function f_download() {
                     TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=$( ${CMD_GREP} --invert-match '^$' <<< "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS}" 2> /dev/null | ${CMD_SED} '$d' )
                     for k in ${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS} ; do
                         if [ "${k}x" != "x" ] ; then
-                            ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot remove "${i}" "${k}" --config ~/".proxmox-offline-mirror.cfg" >/dev/null 2>&1
+                            ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot remove "${i}" "${k}" --config ${HOME}/.proxmox-offline-mirror.cfg >/dev/null 2>&1
                             
                             if [ $? -eq ${TMP_TRUE} ] ; then
                                 f_output "info" "The Proxmox enterprise mirror snapshot '${k}' with ID '${i}' and configuration file '${HOME}/.proxmox-offline-mirror.cfg' was successfully removed."
@@ -708,7 +765,7 @@ function f_download() {
                     ${CMD_PROXMOX_OFFLINE_MIRROR} mirror gc "${i}" --config ${HOME}/.proxmox-offline-mirror.cfg >/dev/null 2>&1
                 fi
                 
-                TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=$( ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot list --id "${i}" --output-format text --config ~/".proxmox-offline-mirror.cfg" 2> /dev/null | ${CMD_AWK} -F '-\ ' '{ print $2 }' | ${CMD_GREP} --invert-match '^$' | ${CMD_GREP} "" -B1 )
+                TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS=$( ${CMD_PROXMOX_OFFLINE_MIRROR} mirror snapshot list --id "${i}" --output-format text --config ${HOME}/.proxmox-offline-mirror.cfg 2> /dev/null | ${CMD_AWK} -F '-\ ' '{ print $2 }' | ${CMD_GREP} --invert-match '^$' | ${CMD_GREP} "" -B1 )
                 
                 if [ "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS}x" != "x" ] ; then
                     ${CMD_LN} --symbolic --force --no-dereference --target-directory="${REPO_DOWNLOAD_BASEPATH}/proxmox/enterprise/${i}/" "${TMP_DOWNLOAD_PROXMOX_ENTERPRISE_SNAPSHOTS}/dists" 2> /dev/null
@@ -755,9 +812,9 @@ function f_download() {
                     if [ ! -d "${TMP_DOWNLOAD_GIT_PATH}" ] ; then
                         ${CMD_GIT} clone --quiet --mirror "${TMP_DOWNLOAD_GIT_URI}" "${TMP_DOWNLOAD_GIT_PATH}"
                         if [ $? -eq ${TMP_TRUE} ] ; then
-                            f_output "info" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully initialized for URI '${TMP_DOWNLOAD_GIT_URI}'."
+                            f_output "info" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully initialized for URI '${TMP_DOWNLOAD_GIT_URI}'."
                         else
-                            f_output "warning" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be initialized. Skipping it..."
+                            f_output "warning" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be initialized. Skipping it..."
                             ${CMD_RM} -rf "${TMP_DOWNLOAD_GIT_PATH}" 2> /dev/null
                             continue
                         fi
@@ -765,13 +822,13 @@ function f_download() {
                     cd "${TMP_DOWNLOAD_GIT_PATH}"
                     ${CMD_GIT} fetch --quiet --all 2> /dev/null
                     if [ $? -eq ${TMP_TRUE} ] ; then
-                        f_output "info" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully updated for URI '${TMP_DOWNLOAD_GIT_URI}'."
+                        f_output "info" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' was successfully updated for URI '${TMP_DOWNLOAD_GIT_URI}'."
                     else
-                        f_output "warning" "The GIT repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be updated. Skipping it..."
+                        f_output "warning" "The git repository folder '${TMP_DOWNLOAD_GIT_PATH}' for URI '${TMP_DOWNLOAD_GIT_URI}' could not be updated Skipping it..."
                     fi
                     ${CMD_GIT} reset --hard origin/master 2> /dev/null
                     cd "${REPO_DOWNLOAD_BASEPATH}"
-
+                    
                     # download releases
                     TMP_DOWNLOAD_GIT_URI_SHORT=$( ${CMD_AWK} -F '.git$' '{ print $1 }' <<< "${TMP_DOWNLOAD_GIT_URI}" )
                     TMP_DOWNLOAD_GIT_VERSION=$( ${CMD_WGET} --connect-timeout=5 --waitretry=1 --tries=1 --server-response "${TMP_DOWNLOAD_GIT_URI_SHORT}/releases/latest" --quiet --output-document=/dev/null 2>&1 | ${CMD_AWK} -F 'Location: ' '{ printf $2 }' | ${CMD_AWK} -F ' ' '{ print $1 }' | ${CMD_AWK} -F '/' '{ print $NF }' )
@@ -820,7 +877,7 @@ function f_download() {
         if [ "${REPO_DOWNLOAD_OTHER_REPOSITORIES}x" != "x" ] ; then
                 TMP_IFS=${IFS}
                 IFS='|'
-                for TMP in ${REPO_DOWNLOAD_OTHER_REPOSITORIES} ; do
+                for TMP in ${REPO_DOWNLOAD_OTHER_REPOSITORIES} ; do 
                     TMP_DOWNLOAD_OTHER_URI=$( ${CMD_AWK} -F ':::' '{ print $1 }' <<< "${TMP}" )
                     TMP_DOWNLOAD_OTHER_PATH=$( ${CMD_AWK} -F ':::' '{ print $2 }' <<< "${TMP}" )
                     TMP_DOWNLOAD_OTHER_PATH="${REPO_DOWNLOAD_BASEPATH}/other/${TMP_DOWNLOAD_OTHER_PATH}"
@@ -954,8 +1011,8 @@ function f_proxmox_enterprise_config() {
     TMP_PROXMOX_ENTERPRISE_CONFIG_OPERATION=${2}
     TMP_PROXMOX_ENTERPRISE_CONFIG_OPTIONS=${3}
     
-    if [[ ! "${TMP_PROXMOX_ENTERPRISE_CONFIG_COMMAND}" =~ ^(config mirror|key)$ ]] ; then
-        f_output "warning" "The command for the Proxmox enterprise config operation needs to be either 'config mirror' or 'key' but is '${TMP_PROXMOX_ENTERPRISE_CONFIG_COMMAND}'. Ignoring operation..."
+    if [[ ! "${TMP_PROXMOX_ENTERPRISE_CONFIG_COMMAND}" =~ ^(config media|config mirror|key)$ ]] ; then
+        f_output "warning" "The command for the Proxmox enterprise config operation needs to be either 'config media', 'config mirror' or 'key' but is '${TMP_PROXMOX_ENTERPRISE_CONFIG_COMMAND}'. Ignoring operation..."
         return ${TMP_FALSE}
     fi
     
@@ -1002,7 +1059,7 @@ function f_proxmox_enterprise_config() {
 }
 
 # set version information
-VERSION="1.0"
+VERSION="1.1"
 
 trap f_quit EXIT
 trap f_quit SIGQUIT
